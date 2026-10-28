@@ -1,3 +1,12 @@
+/*
+ * NATIVE C++ ENGINE & FEATURE LIST
+ * Location: app/src/main/jni/Main.cpp
+ *
+ * Purpose:
+ * - Define the list of UI features passed to Java via GetFeatureList()
+ * - Implement native event callbacks triggered when UI controls change
+ */
+
 #include <list>
 #include <vector>
 #include <cstring>

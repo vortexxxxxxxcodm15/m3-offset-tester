@@ -1,11 +1,11 @@
 package com.android.support;
 
-import android.app.Activity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     //Only if you have changed MainActivity to yours and you wanna call game's activity.
     public String GameActivity = "com.unity3d.player.UnityPlayerActivity";

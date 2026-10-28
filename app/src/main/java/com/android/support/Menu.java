@@ -1,4 +1,11 @@
-//Please don't replace listeners with lambda!
+/*
+ * UI DESIGN & FLOATING OVERLAY LAYOUT (MATERIAL 3)
+ * Location: app/src/main/java/com/android/support/Menu.java
+ *
+ * Purpose:
+ * - Construct the Material 3 floating window overlay and UI widgets
+ * - Inflate and manage MaterialSwitch, MaterialButton, MaterialCheckBox, MaterialRadioButton, etc.
+ */
 
 package com.android.support;
 
@@ -54,6 +61,17 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.view.ContextThemeWrapper;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.color.DynamicColors;
+import com.google.android.material.color.MaterialColors;
+import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.android.material.radiobutton.MaterialRadioButton;
+import com.google.android.material.slider.Slider;
+import com.google.android.material.textview.MaterialTextView;
+
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -72,30 +90,26 @@ public class Menu {
     //region Variable
     public static final String TAG = "Mod_Menu"; //Tag for logcat
 
-    int TEXT_COLOR = Color.parseColor("#82CAFD");
-    int TEXT_COLOR_2 = Color.parseColor("#FFFFFF");
-    int BTN_COLOR = Color.parseColor("#1C262D");
-    int MENU_BG_COLOR = Color.parseColor("#EE1C2A35"); //#AARRGGBB
-    int MENU_FEATURE_BG_COLOR = Color.parseColor("#DD141C22"); //#AARRGGBB
-    int MENU_WIDTH = 290;
-    int MENU_HEIGHT = 210;
+    int TEXT_COLOR;
+    int TEXT_COLOR_2;
+    int BTN_COLOR;
+    int MENU_BG_COLOR;
+    int MENU_FEATURE_BG_COLOR;
+    int MENU_WIDTH = 300;
+    int MENU_HEIGHT = 230;
     int POS_X = 0;
     int POS_Y = 100;
 
-    float MENU_CORNER = 4f;
-    int ICON_SIZE = 45; //Change both width and height of image
-    float ICON_ALPHA = 0.7f; //Transparent
-    int ToggleON = Color.GREEN;
-    int ToggleOFF = Color.RED;
-    int BtnON = Color.parseColor("#1b5e20");
-    int BtnOFF = Color.parseColor("#7f0000");
-    int CategoryBG = Color.parseColor("#2F3D4C");
-    int SeekBarColor = Color.parseColor("#80CBC4");
-    int SeekBarProgressColor = Color.parseColor("#80CBC4");
-    int CheckBoxColor = Color.parseColor("#80CBC4");
-    int RadioColor = Color.parseColor("#FFFFFF");
-	int CollapseColor = Color.parseColor("#232F2C");
-    String NumberTxtColor = "#41c300";
+    float MENU_CORNER = 16f;
+    int ICON_SIZE = 48; //Change both width and height of image
+    float ICON_ALPHA = 0.85f; //Transparent
+    int ToggleON;
+    int ToggleOFF;
+    int BtnON;
+    int BtnOFF;
+    int CategoryBG;
+    int CollapseColor;
+    String NumberTxtColor;
     //********************************************************************//
 
     RelativeLayout mCollapsed, mRootContainer;
@@ -126,32 +140,51 @@ public class Menu {
     // Reference: https://www.androidhive.info/2016/11/android-floating-widget-like-facebook-chat-head/
     public Menu(Context context) {
 
-        getContext = context;
-        Preferences.context = context;
-        rootFrame = new FrameLayout(context); // Global markup
+        Context dynamicContext = DynamicColors.wrapContextIfAvailable(context);
+        ContextThemeWrapper themeContext = new ContextThemeWrapper(dynamicContext, R.style.AppTheme);
+        getContext = themeContext;
+        Preferences.context = themeContext;
+
+        // Resolve dynamic Material 3 theme and Material You dynamic color attributes
+        TEXT_COLOR = MaterialColors.getColor(themeContext, android.R.attr.textColorPrimary, Color.parseColor("#E6E1E5"));
+        TEXT_COLOR_2 = MaterialColors.getColor(themeContext, android.R.attr.textColorSecondary, Color.parseColor("#CAC4D0"));
+        BTN_COLOR = MaterialColors.getColor(themeContext, com.google.android.material.R.attr.colorSurfaceContainerHigh, Color.parseColor("#2B2930"));
+        int surfaceContainer = MaterialColors.getColor(themeContext, com.google.android.material.R.attr.colorSurfaceContainer, Color.parseColor("#1C1B1F"));
+        MENU_BG_COLOR = (surfaceContainer & 0x00FFFFFF) | 0xEE000000; // Alpha EE
+        int surfaceContainerLow = MaterialColors.getColor(themeContext, com.google.android.material.R.attr.colorSurfaceContainerLow, Color.parseColor("#25232A"));
+        MENU_FEATURE_BG_COLOR = (surfaceContainerLow & 0x00FFFFFF) | 0xDD000000; // Alpha DD
+
+        int primaryColor = MaterialColors.getColor(themeContext, com.google.android.material.R.attr.colorPrimary, Color.parseColor("#D0BCFF"));
+        ToggleON = primaryColor;
+        ToggleOFF = MaterialColors.getColor(themeContext, com.google.android.material.R.attr.colorSurfaceVariant, Color.parseColor("#4A4458"));
+        BtnON = MaterialColors.getColor(themeContext, com.google.android.material.R.attr.colorPrimaryContainer, Color.parseColor("#4F378B"));
+        BtnOFF = MaterialColors.getColor(themeContext, com.google.android.material.R.attr.colorSurfaceVariant, Color.parseColor("#362F4A"));
+        CategoryBG = MaterialColors.getColor(themeContext, com.google.android.material.R.attr.colorSecondaryContainer, Color.parseColor("#332D41"));
+        CollapseColor = MaterialColors.getColor(themeContext, com.google.android.material.R.attr.colorSurfaceContainerHigh, Color.parseColor("#2B2930"));
+        NumberTxtColor = String.format("#%06X", (0xFFFFFF & primaryColor));
+
+        rootFrame = new FrameLayout(themeContext); // Global markup
         rootFrame.setOnTouchListener(onTouchListener());
-        mRootContainer = new RelativeLayout(context); // Markup on which two markups of the icon and the menu itself will be placed
-        mCollapsed = new RelativeLayout(context); // Markup of the icon (when the menu is minimized)
+        mRootContainer = new RelativeLayout(themeContext); // Markup on which two markups of the icon and the menu itself will be placed
+        mCollapsed = new RelativeLayout(themeContext); // Markup of the icon (when the menu is minimized)
         mCollapsed.setVisibility(View.VISIBLE);
         mCollapsed.setAlpha(ICON_ALPHA);
 
         //********** The box of the mod menu **********
-        mExpanded = new LinearLayout(context); // Menu markup (when the menu is expanded)
+        mExpanded = new LinearLayout(themeContext); // Menu markup (when the menu is expanded)
         mExpanded.setVisibility(View.GONE);
-        mExpanded.setBackgroundColor(MENU_BG_COLOR);
         mExpanded.setOrientation(LinearLayout.VERTICAL);
-        // mExpanded.setPadding(1, 1, 1, 1); //So borders would be visible
         mExpanded.setLayoutParams(new LinearLayout.LayoutParams(dp(MENU_WIDTH), WRAP_CONTENT));
         GradientDrawable gdMenuBody = new GradientDrawable();
-        gdMenuBody.setCornerRadius(MENU_CORNER); //Set corner
+        gdMenuBody.setCornerRadius(dp((int) MENU_CORNER)); //Set corner
         gdMenuBody.setColor(MENU_BG_COLOR); //Set background color
-        gdMenuBody.setStroke(1, Color.parseColor("#32cb00")); //Set border
-        //mExpanded.setBackground(gdMenuBody); //Apply GradientDrawable to it
+        gdMenuBody.setStroke(1, Color.parseColor("#49454F")); //Material 3 outline
+        mExpanded.setBackground(gdMenuBody); //Apply GradientDrawable to it
 
         //********** The icon to open mod menu **********
         startimage = new ImageView(context);
         startimage.setLayoutParams(new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
-        int applyDimension = (int) TypedValue.applyDimension(1, ICON_SIZE, context.getResources().getDisplayMetrics()); //Icon size
+        int applyDimension = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, ICON_SIZE, context.getResources().getDisplayMetrics()); //Icon size
         startimage.getLayoutParams().height = applyDimension;
         startimage.getLayoutParams().width = applyDimension;
         //startimage.requestLayout();
@@ -171,7 +204,7 @@ public class Menu {
         //********** The icon in Webview to open mod menu **********
         WebView wView = new WebView(context); //Icon size width=\"50\" height=\"50\"
         wView.setLayoutParams(new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT));
-        int applyDimension2 = (int) TypedValue.applyDimension(1, ICON_SIZE, context.getResources().getDisplayMetrics()); //Icon size
+        int applyDimension2 = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, ICON_SIZE, context.getResources().getDisplayMetrics()); //Icon size
         wView.getLayoutParams().height = applyDimension2;
         wView.getLayoutParams().width = applyDimension2;
         wView.loadData("<html>" +
@@ -186,13 +219,13 @@ public class Menu {
         wView.setOnTouchListener(onTouchListener());
 
         //********** Settings icon **********
-        TextView settings = new TextView(context); //Android 5 can't show ⚙, instead show other icon instead
-        settings.setText(Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M ? "⚙" : "\uD83D\uDD27");
-        settings.setTextColor(TEXT_COLOR);
-        settings.setTypeface(Typeface.DEFAULT_BOLD);
-        settings.setTextSize(20.0f);
-        RelativeLayout.LayoutParams rlsettings = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
+        ImageView settings = new ImageView(themeContext);
+        settings.setImageResource(R.drawable.ic_settings);
+        settings.setColorFilter(TEXT_COLOR, PorterDuff.Mode.SRC_IN);
+        int settingsSize = dp(24);
+        RelativeLayout.LayoutParams rlsettings = new RelativeLayout.LayoutParams(settingsSize, settingsSize);
         rlsettings.addRule(ALIGN_PARENT_RIGHT);
+        rlsettings.addRule(RelativeLayout.CENTER_VERTICAL);
         settings.setLayoutParams(rlsettings);
         settings.setOnClickListener(new View.OnClickListener() {
             boolean settingsOpen;
@@ -263,7 +296,7 @@ public class Menu {
         RelativeLayout.LayoutParams lParamsHideBtn = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
         lParamsHideBtn.addRule(ALIGN_PARENT_LEFT);
 
-        Button hideBtn = new Button(context);
+        MaterialButton hideBtn = new MaterialButton(themeContext);
         hideBtn.setLayoutParams(lParamsHideBtn);
         hideBtn.setBackgroundColor(Color.TRANSPARENT);
         hideBtn.setText("HIDE/KILL (Hold)");
@@ -289,7 +322,7 @@ public class Menu {
         RelativeLayout.LayoutParams lParamsCloseBtn = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
         lParamsCloseBtn.addRule(ALIGN_PARENT_RIGHT);
 
-        Button closeBtn = new Button(context);
+        MaterialButton closeBtn = new MaterialButton(themeContext);
         closeBtn.setLayoutParams(lParamsCloseBtn);
         closeBtn.setBackgroundColor(Color.TRANSPARENT);
         closeBtn.setText("MINIMIZE");
@@ -537,28 +570,7 @@ public class Menu {
     }
 
     private void Switch(LinearLayout linLayout, final int featNum, final String featName, boolean swiOn) {
-        final Switch switchR = new Switch(getContext);
-        ColorStateList buttonStates = new ColorStateList(
-                new int[][]{
-                        new int[]{-android.R.attr.state_enabled},
-                        new int[]{android.R.attr.state_checked},
-                        new int[]{}
-                },
-                new int[]{
-                        Color.BLUE,
-                        ToggleON, // ON
-                        ToggleOFF // OFF
-                }
-        );
-        //Set colors of the switch. Comment out if you don't like it
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            try {
-                switchR.getThumbDrawable().setTintList(buttonStates);
-                switchR.getTrackDrawable().setTintList(buttonStates);
-            } catch (NullPointerException ex) {
-                Log.d(TAG, String.valueOf(ex));
-            }
-        }
+        final MaterialSwitch switchR = new MaterialSwitch(getContext);
         switchR.setText(featName);
         switchR.setTextColor(TEXT_COLOR_2);
         switchR.setPadding(10, 5, 0, 5);
@@ -585,52 +597,65 @@ public class Menu {
 
     private void SeekBar(LinearLayout linLayout, final int featNum, final String featName, final int min, int max) {
         int loadedProg = Preferences.loadPrefInt(featName, featNum);
+        int currentVal = (loadedProg == 0) ? min : loadedProg;
+        if (currentVal < min) currentVal = min;
+        if (currentVal > max) currentVal = max;
+
         LinearLayout linearLayout = new LinearLayout(getContext);
-        linearLayout.setPadding(10, 5, 0, 5);
+        linearLayout.setPadding(10, 5, 10, 5);
         linearLayout.setOrientation(LinearLayout.VERTICAL);
         linearLayout.setGravity(Gravity.CENTER);
 
-        final TextView textView = new TextView(getContext);
-        textView.setText(Html.fromHtml(featName + ": <font color='" + NumberTxtColor + "'>" + ((loadedProg == 0) ? min : loadedProg)));
+        final MaterialTextView textView = new MaterialTextView(getContext);
+        textView.setText(Html.fromHtml(featName + ": <font color='" + NumberTxtColor + "'>" + currentVal + "</font>"));
         textView.setTextColor(TEXT_COLOR_2);
 
-        SeekBar seekBar = new SeekBar(getContext);
-        seekBar.setPadding(25, 10, 35, 10);
-        seekBar.setMax(max);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            seekBar.setMin(min); //setMin for Oreo and above
-        seekBar.setProgress((loadedProg == 0) ? min : loadedProg);
-        seekBar.getThumb().setColorFilter(SeekBarColor, PorterDuff.Mode.SRC_ATOP);
-        seekBar.getProgressDrawable().setColorFilter(SeekBarProgressColor, PorterDuff.Mode.SRC_ATOP);
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
+        Slider slider = new Slider(getContext);
+        slider.setValueFrom((float) min);
+        slider.setValueTo((float) max);
+        if (max - min <= 100) {
+            slider.setStepSize(1.0f); // Discrete stop indicators on the thick track
+        }
+        slider.setValue((float) currentVal);
+        slider.setTrackHeight(dp(10)); // Thick Material 3 track
 
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
+        // Material 3 colors for thick track & stop indicators
+        ColorStateList primaryTint = ColorStateList.valueOf(Color.parseColor("#D0BCFF"));
+        ColorStateList trackInactiveTint = ColorStateList.valueOf(Color.parseColor("#49454F"));
+        ColorStateList stopIndicatorTint = ColorStateList.valueOf(Color.parseColor("#381E72"));
 
-            public void onProgressChanged(SeekBar seekBar, int i, boolean z) {
-                //if progress is greater than minimum, don't go below. Else, set progress
-                seekBar.setProgress(i < min ? min : i);
-                Preferences.changeFeatureInt(featName, featNum, i < min ? min : i);
-                textView.setText(Html.fromHtml(featName + ": <font color='" + NumberTxtColor + "'>" + (i < min ? min : i)));
+        slider.setTrackActiveTintList(primaryTint);
+        slider.setTrackInactiveTintList(trackInactiveTint);
+        slider.setThumbTintList(primaryTint);
+        slider.setHaloTintList(ColorStateList.valueOf(Color.parseColor("#38D0BCFF")));
+        slider.setTickActiveTintList(stopIndicatorTint);
+        slider.setTickInactiveTintList(primaryTint);
+
+        slider.addOnChangeListener(new Slider.OnChangeListener() {
+            @Override
+            public void onValueChange(Slider slider, float value, boolean fromUser) {
+                int val = (int) value;
+                Preferences.changeFeatureInt(featName, featNum, val);
+                textView.setText(Html.fromHtml(featName + ": <font color='" + NumberTxtColor + "'>" + val + "</font>"));
             }
         });
+
         linearLayout.addView(textView);
-        linearLayout.addView(seekBar);
+        linearLayout.addView(slider);
 
         linLayout.addView(linearLayout);
     }
 
     private void Button(LinearLayout linLayout, final int featNum, final String featName) {
-        final Button button = new Button(getContext);
+        final MaterialButton button = new MaterialButton(getContext);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         layoutParams.setMargins(7, 5, 7, 5);
         button.setLayoutParams(layoutParams);
-        button.setTextColor(TEXT_COLOR_2);
+        button.setTextColor(TEXT_COLOR);
         button.setAllCaps(false); //Disable caps to support html
         button.setText(Html.fromHtml(featName));
         button.setBackgroundColor(BTN_COLOR);
+        button.setCornerRadius(dp(12));
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 switch (featNum) {
@@ -651,14 +676,15 @@ public class Menu {
     }
 
     private void ButtonLink(LinearLayout linLayout, final String featName, final String url) {
-        final Button button = new Button(getContext);
+        final MaterialButton button = new MaterialButton(getContext);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         layoutParams.setMargins(7, 5, 7, 5);
         button.setLayoutParams(layoutParams);
         button.setAllCaps(false); //Disable caps to support html
-        button.setTextColor(TEXT_COLOR_2);
+        button.setTextColor(TEXT_COLOR);
         button.setText(Html.fromHtml(featName));
         button.setBackgroundColor(BTN_COLOR);
+        button.setCornerRadius(dp(12));
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -671,12 +697,13 @@ public class Menu {
     }
 
     private void ButtonOnOff(LinearLayout linLayout, final int featNum, String featName, boolean switchedOn) {
-        final Button button = new Button(getContext);
+        final MaterialButton button = new MaterialButton(getContext);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         layoutParams.setMargins(7, 5, 7, 5);
         button.setLayoutParams(layoutParams);
-        button.setTextColor(TEXT_COLOR_2);
+        button.setTextColor(TEXT_COLOR);
         button.setAllCaps(false); //Disable caps to support html
+        button.setCornerRadius(dp(12));
 
         final String finalfeatName = featName.replace("OnOff_", "");
         boolean isOn = Preferences.loadPrefBool(featName, featNum, switchedOn);
@@ -752,13 +779,14 @@ public class Menu {
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         layoutParams.setMargins(7, 5, 7, 5);
 
-        final Button button = new Button(getContext);
+        final MaterialButton button = new MaterialButton(getContext);
         int num = Preferences.loadPrefInt(featName, featNum);
         button.setText(Html.fromHtml(featName + ": <font color='" + NumberTxtColor + "'>" + num + "</font>"));
         button.setAllCaps(false);
         button.setLayoutParams(layoutParams);
         button.setBackgroundColor(BTN_COLOR);
-        button.setTextColor(TEXT_COLOR_2);
+        button.setCornerRadius(dp(12));
+        button.setTextColor(TEXT_COLOR);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -839,13 +867,14 @@ editText.setFocusable(false);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         layoutParams.setMargins(7, 5, 7, 5);
 
-        final Button button = new Button(getContext);
+        final MaterialButton button = new MaterialButton(getContext);
         long num = Preferences.loadPrefLong(featName, featNum);
         button.setText(Html.fromHtml(featName + ": <font color='" + NumberTxtColor + "'>" + num + "</font>"));
         button.setAllCaps(false);
         button.setLayoutParams(layoutParams);
         button.setBackgroundColor(BTN_COLOR);
-        button.setTextColor(TEXT_COLOR_2);
+        button.setCornerRadius(dp(12));
+        button.setTextColor(TEXT_COLOR);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -927,7 +956,7 @@ editText.setFocusable(false);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         layoutParams.setMargins(7, 5, 7, 5);
 
-        final Button button = new Button(getContext);
+        final MaterialButton button = new MaterialButton(getContext);
 
         String string = Preferences.loadPrefString(featName, featNum);
         button.setText(Html.fromHtml(featName + ": <font color='" + NumberTxtColor + "'>" + string + "</font>"));
@@ -935,7 +964,8 @@ editText.setFocusable(false);
         button.setAllCaps(false);
         button.setLayoutParams(layoutParams);
         button.setBackgroundColor(BTN_COLOR);
-        button.setTextColor(TEXT_COLOR_2);
+        button.setCornerRadius(dp(12));
+        button.setTextColor(TEXT_COLOR);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -995,20 +1025,14 @@ editText.setFocusable(false);
     }
 
     private void CheckBox(LinearLayout linLayout, final int featNum, final String featName, boolean switchedOn) {
-        final CheckBox checkBox = new CheckBox(getContext);
+        final MaterialCheckBox checkBox = new MaterialCheckBox(getContext);
         checkBox.setText(featName);
         checkBox.setTextColor(TEXT_COLOR_2);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            checkBox.setButtonTintList(ColorStateList.valueOf(CheckBoxColor));
         checkBox.setChecked(Preferences.loadPrefBool(featName, featNum, switchedOn));
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (checkBox.isChecked()) {
-                    Preferences.changeFeatureBool(featName, featNum, isChecked);
-                } else {
-                    Preferences.changeFeatureBool(featName, featNum, isChecked);
-                }
+                Preferences.changeFeatureBool(featName, featNum, isChecked);
             }
         });
         linLayout.addView(checkBox);
@@ -1018,7 +1042,7 @@ editText.setFocusable(false);
         //Credit: LoraZalora
         final List<String> lists = new LinkedList<>(Arrays.asList(list.split(",")));
 
-        final TextView textView = new TextView(getContext);
+        final MaterialTextView textView = new MaterialTextView(getContext);
         textView.setText(featName + ":");
         textView.setTextColor(TEXT_COLOR_2);
 
@@ -1028,7 +1052,7 @@ editText.setFocusable(false);
         radioGroup.addView(textView);
 
         for (int i = 0; i < lists.size(); i++) {
-            final RadioButton Radioo = new RadioButton(getContext);
+            final MaterialRadioButton Radioo = new MaterialRadioButton(getContext);
             final String finalfeatName = featName, radioName = lists.get(i);
             View.OnClickListener first_radio_listener = new View.OnClickListener() {
                 public void onClick(View v) {
@@ -1038,9 +1062,7 @@ editText.setFocusable(false);
             };
             System.out.println(lists.get(i));
             Radioo.setText(lists.get(i));
-            Radioo.setTextColor(Color.LTGRAY);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                Radioo.setButtonTintList(ColorStateList.valueOf(RadioColor));
+            Radioo.setTextColor(TEXT_COLOR_2);
             Radioo.setOnClickListener(first_radio_listener);
             radioGroup.addView(Radioo);
         }
@@ -1048,7 +1070,7 @@ editText.setFocusable(false);
         int index = Preferences.loadPrefInt(featName, featNum);
         if (index > 0) { //Preventing it to get an index less than 1. below 1 = null = crash
             textView.setText(Html.fromHtml(featName + ": <font color='" + NumberTxtColor + "'>" + lists.get(index - 1)));
-            ((RadioButton) radioGroup.getChildAt(index)).setChecked(true);
+            ((MaterialRadioButton) radioGroup.getChildAt(index)).setChecked(true);
         }
         linLayout.addView(radioGroup);
     }
@@ -1066,11 +1088,11 @@ editText.setFocusable(false);
         collapseSub.setVerticalGravity(16);
         collapseSub.setPadding(0, 5, 0, 5);
         collapseSub.setOrientation(LinearLayout.VERTICAL);
-        collapseSub.setBackgroundColor(Color.parseColor("#222D38"));
+        collapseSub.setBackgroundColor(Color.parseColor("#25232A"));
         collapseSub.setVisibility(View.GONE);
         mCollapse = collapseSub;
 
-        final TextView textView = new TextView(getContext);
+        final MaterialTextView textView = new MaterialTextView(getContext);
         textView.setBackgroundColor(CollapseColor);
         textView.setText("▽ " + text + " ▽");
         textView.setGravity(Gravity.CENTER);
@@ -1106,18 +1128,18 @@ editText.setFocusable(false);
     }
 
     private void Category(LinearLayout linLayout, String text) {
-        TextView textView = new TextView(getContext);
+        MaterialTextView textView = new MaterialTextView(getContext);
         textView.setBackgroundColor(CategoryBG);
         textView.setText(Html.fromHtml(text));
         textView.setGravity(Gravity.CENTER);
-        textView.setTextColor(TEXT_COLOR_2);
+        textView.setTextColor(TEXT_COLOR);
         textView.setTypeface(null, Typeface.BOLD);
-        textView.setPadding(0, 5, 0, 5);
+        textView.setPadding(0, 8, 0, 8);
         linLayout.addView(textView);
     }
 
     private void TextView(LinearLayout linLayout, String text) {
-        TextView textView = new TextView(getContext);
+        MaterialTextView textView = new MaterialTextView(getContext);
         textView.setText(Html.fromHtml(text));
         textView.setTextColor(TEXT_COLOR_2);
         textView.setPadding(10, 5, 10, 5);
